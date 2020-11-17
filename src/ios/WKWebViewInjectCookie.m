@@ -66,15 +66,33 @@
 - (void)getCookies:(CDVInvokedUrlCommand *)command {
     self.callbackId = command.callbackId;
 
-    NSString *domain = command.arguments[0];
-
     [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
-
-    WKWebView* wkWebView = (WKWebView*) self.webView;
     NSArray<NSHTTPCookie *> *cookies = (NSArray<NSHTTPCookie *> *) [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies];
+    NSMutableArray<NSDictionary*> *array = [NSMutableArray array];
+
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    NSLocale *enUSPOSIXLocale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+    [dateFormatter setLocale:enUSPOSIXLocale];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+    [dateFormatter setCalendar:[NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian]];
+
+    for (int i = 0; i < cookies.count; i++) {
+        NSHTTPCookie* cookie = cookies[i];
+
+        NSDictionary* item = @{
+            @"domain": cookie.domain,
+            @"expireDate": (cookie.expiresDate ? [dateFormatter stringFromDate:cookie.expiresDate]: NULL),
+            @"name": cookie.name,
+            @"path": cookie.path,
+            @"HTTPOnly": [NSNumber numberWithBool:cookie.HTTPOnly],
+            @"value": cookie.value
+        };
+
+        [array addObject:item];
+    }
 
     if (@available(iOS 2.0, *)) {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:cookies];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:array];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
     } else {
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
