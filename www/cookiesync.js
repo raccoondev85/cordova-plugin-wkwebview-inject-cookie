@@ -25,9 +25,10 @@ module.exports = {
         var sPos = url.indexOf("\/");
         var domain = url.substr(0, sPos);
         var path = url.substr(sPos, (url.length - sPos));
+        var expireDate = (expire ? expire.toISOString() : null);
 
         exec(successCallback, errorCallback, "WKWebViewInjectCookie",
-            "setCookie", [domain, path, name ? name : "foo", value ? value : "bar", expire]);
+            "setCookie", [domain, path, name ? name : "foo", value ? value : "bar", expireDate]);
     },
     injectCookie: function (url, successCallback, errorCallback) {
         this.setCookie(url, "foo", "bar", null, successCallback, errorCallback);
