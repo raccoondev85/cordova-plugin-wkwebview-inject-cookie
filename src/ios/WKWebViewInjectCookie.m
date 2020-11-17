@@ -41,14 +41,13 @@
         [cookieProperties setObject:domain forKey:NSHTTPCookieOriginURL];
         [cookieProperties setObject:path forKey:NSHTTPCookiePath];
 
-        if (expire) {
+        if (![expire isEqual: [NSNull null]]) {
             NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
             [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
-            // Always use this locale when parsing fixed format date strings
             NSLocale *posix = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
             [formatter setLocale:posix];
-            NSDate *date = [formatter dateFromString:dateString];
-            [cookieProperties setObject:date forKey:NSHTTPCookieExpiresDate];
+            NSDate *date = [formatter dateFromString:expire];
+            [cookieProperties setObject:date forKey:NSHTTPCookieExpires];
         }
 
         NSHTTPCookie * cookie = [NSHTTPCookie cookieWithProperties:cookieProperties];
