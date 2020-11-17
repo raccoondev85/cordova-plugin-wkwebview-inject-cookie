@@ -17,21 +17,11 @@
 var exec = require("cordova/exec");
 
 module.exports = {
-    setCookie: function (url, path, name, value, expire, successCallback, errorCallback) {
-
-        if ((url.substr(0, 4) === "http") && (url.indexOf("\/\/") >= 0)) {
-            url = url.slice(url.indexOf("\/\/") + 2);
-        }
-        var sPos = url.indexOf("\/");
-        var domain = url.substr(0, sPos);
+    setCookie: function (domain, path, name, value, expire, successCallback, errorCallback) {
         var expireDate = (expire ? expire.toISOString() : null);
 
         exec(successCallback, errorCallback, "WKWebViewInjectCookie",
             "setCookie", [domain, path, name ? name : "foo", value ? value : "bar", expireDate]);
-    },
-
-    injectCookie: function (url, successCallback, errorCallback) {
-        this.setCookie(url, "foo", "bar", null, successCallback, errorCallback);
     },
 
     getCookies: function (successCallback, errorCallback) {
