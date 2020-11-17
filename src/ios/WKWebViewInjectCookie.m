@@ -27,18 +27,30 @@
     NSString *path = command.arguments[1];
     NSString *name = command.arguments[2];
     NSString *value = command.arguments[3];
-    
+    NSString *expire = command.arguments[4];
+
     [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
 
     WKWebView* wkWebView = (WKWebView*) self.webView;
 
-    if (@available(iOS 11.0, *)) {
+    if (@available(iOS 2.0, *)) {
         NSMutableDictionary *cookieProperties = [NSMutableDictionary dictionary];
         [cookieProperties setObject:name forKey:NSHTTPCookieName];
         [cookieProperties setObject:value forKey:NSHTTPCookieValue];
         [cookieProperties setObject:domain forKey:NSHTTPCookieDomain];
         [cookieProperties setObject:domain forKey:NSHTTPCookieOriginURL];
         [cookieProperties setObject:path forKey:NSHTTPCookiePath];
+
+        if (expire) {
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
+            // Always use this locale when parsing fixed format date strings
+            NSLocale *posix = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+            [formatter setLocale:posix];
+            NSDate *date = [formatter dateFromString:dateString];
+            [cookieProperties setObject:date forKey:NSHTTPCookieExpiresDate];
+        }
+
         NSHTTPCookie * cookie = [NSHTTPCookie cookieWithProperties:cookieProperties];
 
         [wkWebView.configuration.websiteDataStore.httpCookieStore setCookie:cookie completionHandler:^{NSLog(@"Cookies synced");}];
