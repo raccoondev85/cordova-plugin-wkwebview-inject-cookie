@@ -30,7 +30,13 @@ module.exports = {
         exec(successCallback, errorCallback, "WKWebViewInjectCookie",
             "setCookie", [domain, path, name ? name : "foo", value ? value : "bar", expireDate]);
     },
+
     injectCookie: function (url, successCallback, errorCallback) {
         this.setCookie(url, "foo", "bar", null, successCallback, errorCallback);
+    },
+
+    getCookies: function (url, successCallback, errorCallback) {
+        exec(successCallback, errorCallback, "WKWebViewInjectCookie",
+            "getCookies", [url]);
     }
 };

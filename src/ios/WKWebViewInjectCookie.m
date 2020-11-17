@@ -63,4 +63,23 @@
     };
 }
 
+- (void)getCookies:(CDVInvokedUrlCommand *)command {
+    self.callbackId = command.callbackId;
+
+    NSString *domain = command.arguments[0];
+
+    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
+
+    WKWebView* wkWebView = (WKWebView*) self.webView;
+    NSArray<NSHTTPCookie *> *cookies = (NSArray<NSHTTPCookie *> *) [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies];
+
+    if (@available(iOS 2.0, *)) {
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:cookies];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+    } else {
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+    };
+}
+
 @end
