@@ -66,38 +66,39 @@
 - (void)getCookies:(CDVInvokedUrlCommand *)command {
     self.callbackId = command.callbackId;
 
-    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
-    NSArray<NSHTTPCookie *> *cookies = (NSArray<NSHTTPCookie *> *) [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies];
-    NSMutableArray<NSDictionary*> *array = [NSMutableArray array];
+    NSString* url = [command.arguments objectAtIndex:0];
 
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     NSLocale *enUSPOSIXLocale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
     [dateFormatter setLocale:enUSPOSIXLocale];
     [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
     [dateFormatter setCalendar:[NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian]];
+    
+    WKHTTPCookieStore* cookies = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
 
-    for (int i = 0; i < cookies.count; i++) {
-        NSHTTPCookie* cookie = cookies[i];
+    [cookies getAllCookies:^(NSArray<NSHTTPCookie *> * _Nonnull allCookies) {
+        NSMutableArray<NSDictionary*> *array = [NSMutableArray array];
 
-        NSDictionary* item = @{
-            @"domain": cookie.domain,
-            @"expireDate": (cookie.expiresDate ? [dateFormatter stringFromDate:cookie.expiresDate]: NULL),
-            @"name": cookie.name,
-            @"path": cookie.path,
-            @"HTTPOnly": [NSNumber numberWithBool:cookie.HTTPOnly],
-            @"value": cookie.value
-        };
+ 
+        for (NSHTTPCookie *cookie in allCookies) {
+            if (url == nil || [url length] == 0 || [url rangeOfString:cookie.domain].location != NSNotFound) {
+   
+                NSDictionary* item = @{
+                    @"domain": cookie.domain,
+                    @"expireDate": (cookie.expiresDate ? [dateFormatter stringFromDate:cookie.expiresDate]: [NSNull null]),
+                    @"name": cookie.name,
+                    @"path": cookie.path,
+                    @"HTTPOnly": [NSNumber numberWithBool:cookie.HTTPOnly],
+                    @"sessionOnly": [NSNumber numberWithBool:cookie.sessionOnly],
+                    @"value": cookie.value
+                };
+                [array addObject:item];
+            }
 
-        [array addObject:item];
-    }
+        }
 
-    if (@available(iOS 2.0, *)) {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:array];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
-    } else {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
-    };
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:array] callbackId:command.callbackId];
+    }];
 }
 
 @end
